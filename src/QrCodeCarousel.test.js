@@ -66,7 +66,7 @@ describe('QrCodeCarousel', () => {
 
   test('loads contacts from localStorage if available', async () => {
     const mockContacts = [{ url: 'https://example.com', description: 'Example' }];
-    localStorage.setItem('contactsData', JSON.stringify(mockContacts));
+    localStorage.setItem('QrData', JSON.stringify(mockContacts)); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);
@@ -77,7 +77,7 @@ describe('QrCodeCarousel', () => {
   });
 
   test('handles invalid localStorage data gracefully', async () => {
-    localStorage.setItem('contactsData', 'invalid-json');
+    localStorage.setItem('QrData', 'invalid-json'); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);
@@ -126,7 +126,7 @@ describe('QrCodeCarousel', () => {
       { url: 'https://example1.com', description: 'Example 1' },
       { url: 'https://example2.com', description: 'Example 2' },
     ];
-    localStorage.setItem('contactsData', JSON.stringify(mockContacts));
+    localStorage.setItem('QrData', JSON.stringify(mockContacts)); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);
@@ -168,7 +168,7 @@ describe('QrCodeCarousel', () => {
     const mockContactsData = [
       { url: 'https://example.com/test', description: 'Test Description' },
     ];
-    localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
+    localStorage.setItem('QrData', JSON.stringify(mockContactsData)); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);
@@ -186,7 +186,7 @@ describe('QrCodeCarousel', () => {
       { url: 'https://example.com/test1', description: 'Test Description 1' },
       { url: 'https://example.com/test2', description: 'Test Description 2' },
     ];
-    localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
+    localStorage.setItem('QrData', JSON.stringify(mockContactsData)); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);
@@ -212,7 +212,7 @@ describe('QrCodeCarousel', () => {
       { url: 'https://example.com/test1', description: 'Test Description 1' },
       { url: 'https://example.com/test2', description: 'Test Description 2' },
     ];
-    localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
+    localStorage.setItem('QrData', JSON.stringify(mockContactsData)); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);
@@ -246,7 +246,7 @@ describe('QrCodeCarousel', () => {
       { url: 'https://example.com/test2', description: 'Test Description 2' },
       { url: 'https://example.com/test3', description: 'Test Description 3' },
     ];
-    localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
+    localStorage.setItem('QrData', JSON.stringify(mockContactsData)); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);
@@ -282,7 +282,7 @@ describe('QrCodeCarousel', () => {
       { url: 'https://example.com/test2', description: 'Test Description 2' },
       { url: 'https://example.com/test3', description: 'Test Description 3' },
     ];
-    localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
+    localStorage.setItem('QrData', JSON.stringify(mockContactsData)); // Updated key
 
     await act(async () => {
       render(<QrCodeCarousel />);

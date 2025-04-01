@@ -5,7 +5,7 @@ import yaml from 'js-yaml';
 import './QrCodeCarousel.css';
 
 function QrCodeCarousel() {
-  const [contacts, setContacts] = useState([]);
+  const [qrdata, setQrdata] = useState([]);
   const [qrCodes, setQrCodes] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [descriptionHtml, setDescriptionHtml] = useState(null);
@@ -19,7 +19,7 @@ function QrCodeCarousel() {
     setIsFsApiAvailable('showOpenFilePicker' in window);
   }, []);
 
-  const loadContactsFromFile = async () => {
+  const loadQrdataFromFile = async () => {
     try {
       if (isFsApiAvailable) {
         const [fileHandle] = await window.showOpenFilePicker({
@@ -32,9 +32,9 @@ function QrCodeCarousel() {
         });
         const file = await fileHandle.getFile();
         const yamlText = await file.text();
-        const parsedContacts = yaml.load(yamlText);
-        setContacts(parsedContacts || []);
-        localStorage.setItem('contactsData', JSON.stringify(parsedContacts)); // Save to localStorage
+        const parsedQrdata = yaml.load(yamlText);
+        setQrdata(parsedQrdata || []);
+        localStorage.setItem('QrData', JSON.stringify(parsedQrdata)); // Save to localStorage
         setError(null);
       } else {
         console.error("File System Access API is not available.");
@@ -45,7 +45,7 @@ function QrCodeCarousel() {
     }
   };
 
-  const loadContactsFromInput = () => {
+  const loadQrdataFromInput = () => {
     // Trigger file input for fallback
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -56,9 +56,9 @@ function QrCodeCarousel() {
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const parsedContacts = yaml.load(e.target.result);
-            setContacts(parsedContacts || []);
-            localStorage.setItem('contactsData', JSON.stringify(parsedContacts)); // Save to localStorage
+            const parsedQrdata = yaml.load(e.target.result);
+            setQrdata(parsedQrdata || []);
+            localStorage.setItem('QrData', JSON.stringify(parsedQrdata)); // Save to localStorage
             setError(null);
           } catch (error) {
             console.error('Error parsing file content:', error);
@@ -72,26 +72,26 @@ function QrCodeCarousel() {
   };
 
   useEffect(() => {
-    const savedContacts = localStorage.getItem('contactsData');
-    if (savedContacts) {
+    const savedQrdata = localStorage.getItem('QrData');
+    if (savedQrdata) {
       try {
-        setContacts(JSON.parse(savedContacts));
+        setQrdata(JSON.parse(savedQrdata));
       } catch (e) {
         setError("Invalid data in localStorage"); // Ensure error is a string
-        localStorage.removeItem('contactsData');
+        localStorage.removeItem('QrData');
       }
     }
   }, []);
 
   useEffect(() => {
     const generateQRCodes = async () => {
-      if (Array.isArray(contacts) && contacts.length > 0) {
+      if (Array.isArray(qrdata) && qrdata.length > 0) {
         const codes = await Promise.all(
-          contacts.map(async (contact) => {
+          qrdata.map(async (qrdata) => {
             try {
-              return await QRCode.toDataURL(contact.url, { width: 200 });
+              return await QRCode.toDataURL(qrdata.url, { width: 200 });
             } catch (error) {
-              console.error(`Error generating QR code for ${contact.url}:`, error);
+              console.error(`Error generating QR code for ${qrdata.url}:`, error);
               return '/placeholder.png';
             }
           })
@@ -101,14 +101,14 @@ function QrCodeCarousel() {
     };
 
     generateQRCodes();
-  }, [contacts]);
+  }, [qrdata]);
 
   useEffect(() => {
     if (qrCodes.length > 0) {
       let maxHeight = 0;
-      contacts.forEach((contact) => {
+      qrdata.forEach((qrdata) => {
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = marked.parse(contact.description || '');
+        tempDiv.innerHTML = marked.parse(qrdata.description || '');
         if (typeof window !== 'undefined' && document) {
           document.body.appendChild(tempDiv);
           maxHeight = Math.max(maxHeight, tempDiv.offsetHeight);
@@ -120,14 +120,14 @@ function QrCodeCarousel() {
       });
       setDescriptionHeight(maxHeight);
     }
-  }, [qrCodes, contacts]);
+  }, [qrCodes, qrdata]);
 
   useEffect(() => {
     setDescriptionHtml(null);
-    if (contacts[currentIndex]?.description) {
-      setDescriptionHtml(marked.parse(contacts[currentIndex].description));
+    if (qrdata[currentIndex]?.description) {
+      setDescriptionHtml(marked.parse(qrdata[currentIndex].description));
     }
-  }, [currentIndex, contacts]);
+  }, [currentIndex, qrdata]);
 
   useEffect(() => {
     let touchStartX = 0;
@@ -158,13 +158,13 @@ function QrCodeCarousel() {
         carouselElement.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [currentIndex, contacts]);
+  }, [currentIndex, qrdata]);
 
   const showSlide = (index) => {
-    if (contacts.length === 0) return;
+    if (qrdata.length === 0) return;
     if (index < 0) {
-      setCurrentIndex(contacts.length - 1);
-    } else if (index >= contacts.length) {
+      setCurrentIndex(qrdata.length - 1);
+    } else if (index >= qrdata.length) {
       setCurrentIndex(0);
     } else {
       setCurrentIndex(index);
@@ -176,22 +176,22 @@ function QrCodeCarousel() {
       <div>
         <div>Error: {error}</div>
         {isFsApiAvailable ? (
-          <button onClick={loadContactsFromFile}>Select qrdata.yaml</button>
+          <button onClick={loadQrdataFromFile}>Select qrdata.yaml</button>
         ) : (
-          <button onClick={loadContactsFromInput}>Select qrdata.yaml</button>
+          <button onClick={loadQrdataFromInput}>Select qrdata.yaml</button>
         )}
       </div>
     );
   }
 
-  if (contacts.length === 0) {
+  if (qrdata.length === 0) {
     return (
       <div>
         <div>No qrcode data available. Please select a file.</div>
         {isFsApiAvailable ? (
-          <button onClick={loadContactsFromFile}>Select qrdata.yaml</button>
+          <button onClick={loadQrdataFromFile}>Select qrdata.yaml</button>
         ) : (
-          <button onClick={loadContactsFromInput}>Select qrdata.yaml</button>
+          <button onClick={loadQrdataFromInput}>Select qrdata.yaml</button>
         )}
       </div>
     );
@@ -234,9 +234,9 @@ function QrCodeCarousel() {
       </div>
       <div className="load-new-file">
         {isFsApiAvailable ? (
-          <button onClick={loadContactsFromFile}>Load a different qrdata.yaml</button>
+          <button onClick={loadQrdataFromFile}>Load a different qrdata.yaml</button>
         ) : (
-          <button onClick={loadContactsFromInput}>Load a different qrdata.yaml</button>
+          <button onClick={loadQrdataFromInput}>Load a different qrdata.yaml</button>
         )}
       </div>
     </div>
