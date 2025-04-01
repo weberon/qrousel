@@ -3,7 +3,6 @@ import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import * as fs from 'fs';
 import yaml from 'js-yaml';
 import ContactCarousel from './ContactCarousel';
-import qrcodeData from './data/qrdata.js';
 
 jest.mock('qrcode', () => ({
   toDataURL: jest.fn(() => Promise.resolve('data:image/png;base64,mock-qr-code')),

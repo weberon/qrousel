@@ -1,0 +1,131 @@
+- url: "mailto:john@example.com?subject=Contact%20Info&body=Here%27s%20my%20vCard%3A%20%5Binsert%20URL%5D"
+  description: |
+    **Email with Contact Info**  
+    `mailto:john@example.com?subject=Contact%20Info&body=Here%27s%20my%20vCard...`  
+    - Pre-fills email subject/body for contact sharing  
+    - Attach a `.vcf` file or link to shared contacts
+
+- url: "data:text/vcard;charset=utf-8,BEGIN:VCARD%0AVERSION:4.0%0AFN:Jane%20Doe%0AEMAIL:jane@example.com%0ATEL:+1234567890%0AEND:VCARD"
+  description: |
+    **Embeddable vCard**  
+    `data:text/vcard;charset=utf-8,BEGIN:VCARD...`  
+    - Single-click contact add via QR code or link  
+    - Works in emails/messaging apps
+
+- url: "https://www.linkedin.com/in/username"
+  description: |
+    **LinkedIn Profile**  
+    `https://www.linkedin.com/in/username`  
+    - Standardized professional profile sharing  
+    - Use `linkedin://` on mobile for app deep-linking
+
+- url: "WIFI:T:WPA2;S:OfficeWiFi;P:Pass123;;BEGIN:VCARD%0AFN:John%20Doe%0ATEL:+1234567890%0AEND:VCARD"
+  description: |
+    **Wi-Fi + Contact QR Code**  
+    `WIFI:T:WPA2;S:OfficeWiFi;P:Pass123;;BEGIN:VCARD...`  
+    - Share network access and contact in one scan  
+    - Ideal for conferences/business cards
+
+- url: "https://calendly.com/username/30min"
+  description: |
+    **Scheduling Link**  
+    `https://calendly.com/username/30min`  
+    - Auto-schedules meetings post-contact exchange  
+    - Syncs with Google/Outlook calendars
+
+- url: "https://contacts.google.com/person/[ID]"
+  description: |
+    **Google Contacts Share**  
+    `https://contacts.google.com/person/[ID]`  
+    - Live-updating contact card (requires Google auth)  
+    - Editable by recipient if permissions allow
+
+- url: "zoommtg://zoom.us/join?confno=1234567890"
+  description: |
+    **Zoom Meeting Deep Link**  
+    `zoommtg://zoom.us/join?confno=1234567890`  
+    - One-tap video call after contact exchange  
+    - Works in mobile/desktop Zoom apps
+
+- url: "https://wa.me/1234567890?text=Hi%20[Name]%2C%20per%20our%20conversation..."
+  description: |
+    **WhatsApp Pre-Filled Chat**  
+    `https://wa.me/1234567890?text=Hi%20[Name]...`  
+    - Instant messaging follow-up with context  
+    - Supports business accounts
+
+# Cloud Document Sharing
+- url: "https://docs.google.com/document/d/[DOC_ID]/edit?usp=sharing"
+  description: |
+    **Google Docs Collaboration**  
+    `https://docs.google.com/document/d/[DOC_ID]/edit?usp=sharing`  
+    - Real-time document editing with multiple users  
+    - Replace `[DOC_ID]` with your document's unique ID
+
+- url: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_[ID]"
+  description: |
+    **Microsoft Teams Meeting**  
+    `https://teams.microsoft.com/l/meetup-join/19%3ameeting_[ID]`  
+    - One-click join link for Teams meetings  
+    - Works in browser or Teams app
+
+# Professional Networking
+- url: "https://connect.slack.com/invite/[TEAM]?token=[TOKEN]"
+  description: |
+    **Slack Team Invite**  
+    `https://connect.slack.com/invite/[TEAM]?token=[TOKEN]`  
+    - Share access to your Slack workspace  
+    - Replace placeholders with your team details
+
+- url: "facetime:14085551234"
+  description: |
+    **FaceTime Audio/Video**  
+    `facetime:14085551234`  
+    - iOS-native video calling (replace with phone number)  
+    - Use `facetime-audio:` for voice-only
+
+# Business Card Alternatives
+- url: "https://linktr.ee/yourprofile"
+  description: |
+    **Linktree Profile**  
+    `https://linktr.ee/yourprofile`  
+    - Central hub for all your professional links  
+    - Customizable with contact methods, social media, etc.
+
+- url: "https://qr.ae/pK1234"
+  description: |
+    **Quora Profile QR Code**  
+    `https://qr.ae/pK1234`  
+    - Share professional expertise via Quora  
+    - Generates automatically on your Quora profile
+
+# Payment & Invoicing
+- url: "venmo://paycharge?txn=pay&recipients=user123&amount=10.50&note=Invoice%20#123"
+  description: |
+    **Venmo Payment Request**  
+    `venmo://paycharge?txn=pay&recipients=user123&amount=10.50&note=Invoice%20#123`  
+    - Mobile-only deep link for payment requests  
+    - Adjust amount and note as needed
+
+- url: "https://paypal.me/yourbusiness/50USD?invoice=123"
+  description: |
+    **PayPal.Me Payment Link**  
+    `https://paypal.me/yourbusiness/50USD?invoice=123`  
+    - Fixed-amount payment request with invoice tracking  
+    - Works globally for USD or other currencies
+
+# File Transfer
+- url: "https://we.tl/t-[LINK_ID]"
+  description: |
+    **WeTransfer Download**  
+    `https://we.tl/t-[LINK_ID]`  
+    - Share large files (up to 2GB free)  
+    - Expires after 7 days by default
+
+- url: "airdrop://?text=Here's%20my%20contact%20info"
+  description: |
+    **AirDrop Trigger**  
+    `airdrop://?text=Here's%20my%20contact%20info`  
+    - iOS/Mac-only quick file sharing  
+    - Opens AirDrop interface when clicked
+

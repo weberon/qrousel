@@ -1,4 +1,4 @@
-# public/contacts-test.yaml
+# public/qrdata-test.yaml
 - url: "https://test.com"
   description: "Test Website Description"
 - url: "https://test2.com"
