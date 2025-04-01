@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, act } from 'react'; // Use act from react
+import React, { useState, useEffect, useRef } from 'react'; // Removed act import
 import QRCode from 'qrcode';
 import { marked } from 'marked';
 import yaml from 'js-yaml';
-import './ContactCarousel.css';
+import './QrCodeCarousel.css';
 
-function ContactCarousel() {
+function QrCodeCarousel() {
   const [contacts, setContacts] = useState([]);
   const [qrCodes, setQrCodes] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -96,10 +96,7 @@ function ContactCarousel() {
             }
           })
         );
-        // Wrap state update in act
-        await act(async () => {
-          setQrCodes(codes);
-        });
+        setQrCodes(codes); // Directly update state without act
       }
     };
 
@@ -201,7 +198,7 @@ function ContactCarousel() {
   }
 
   return (
-    <div className="ContactCarousel" ref={carouselRef}>
+    <div className="QrCodeCarousel" ref={carouselRef}>
       <div className="carousel-item">
         <div className="carousel-content">
           <img
@@ -246,4 +243,4 @@ function ContactCarousel() {
   );
 }
 
-export default ContactCarousel;
+export default QrCodeCarousel;

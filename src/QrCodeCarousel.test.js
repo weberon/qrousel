@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import * as fs from 'fs';
 import yaml from 'js-yaml';
-import ContactCarousel from './ContactCarousel';
+import QrCodeCarousel from './QrCodeCarousel';
 
 jest.mock('qrcode', () => ({
   toDataURL: jest.fn(() => Promise.resolve('data:image/png;base64,mock-qr-code')),
@@ -26,7 +26,7 @@ const mockShowOpenFilePicker = jest.fn();
 global.window = Object.create(window);
 global.window.showOpenFilePicker = mockShowOpenFilePicker;
 
-describe('ContactCarousel', () => {
+describe('QrCodeCarousel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockShowOpenFilePicker.mockReset();
@@ -45,7 +45,7 @@ describe('ContactCarousel', () => {
     delete window.showOpenFilePicker;
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     expect(screen.getByText('No qrcode data available. Please select a file.')).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('ContactCarousel', () => {
     window.showOpenFilePicker = jest.fn();
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     expect(screen.getByText('No qrcode data available. Please select a file.')).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', JSON.stringify(mockContacts));
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Check for the description from the mock data
@@ -80,7 +80,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', 'invalid-json');
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Check for the actual rendered message
@@ -97,7 +97,7 @@ describe('ContactCarousel', () => {
     const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Simulate clicking the "Select qrdata.yaml" button
@@ -129,7 +129,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', JSON.stringify(mockContacts));
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     expect(screen.getByRole('button', { name: 'Previous slide' })).toBeInTheDocument();
@@ -150,7 +150,7 @@ describe('ContactCarousel', () => {
     mockFileSelection(mockContactsData);
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     const selectFileButton = screen.getByRole('button', { name: /Select qrdata.yaml/i });
@@ -171,7 +171,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Wait for the first contact to be rendered
@@ -189,7 +189,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Ensure the first contact is displayed
@@ -215,7 +215,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Ensure the second contact is displayed after navigating forward
@@ -249,7 +249,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Navigate to the last contact
@@ -285,7 +285,7 @@ describe('ContactCarousel', () => {
     localStorage.setItem('contactsData', JSON.stringify(mockContactsData));
 
     await act(async () => {
-      render(<ContactCarousel />);
+      render(<QrCodeCarousel />);
     });
 
     // Ensure the first contact is displayed
