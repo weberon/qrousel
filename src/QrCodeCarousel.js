@@ -49,7 +49,7 @@ function QrCodeCarousel() {
     // Trigger file input for fallback
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.yaml,.yml';
+    fileInput.accept = '.yaml,.yml,.txt'; // Allow .txt files
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
       if (file) {
