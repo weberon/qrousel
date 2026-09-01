@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import ContactEditor, { moveEntryAt } from './ContactEditor';
 import { BACKGROUND_PRESETS } from './background';
 
@@ -218,10 +218,58 @@ describe('ContactEditor', () => {
         expect(firstEntry(onChange).background).toBe(BACKGROUND_PRESETS[4].value);
       });
 
+      it('shows how light the colour is', () => {
+        showOne({ ...PLAIN, background: '#f2e6c8' });
+
+        expect(caption()).toHaveTextContent(/0\.80/);
+      });
+
+      it('has no number to show when there is no colour', () => {
+        showOne(PLAIN);
+
+        expect(caption()).not.toHaveTextContent(/luminance/i);
+      });
+
       it('says none for a value the app cannot use', () => {
         showOne({ ...PLAIN, background: 'navy' });
 
         expect(caption()).toHaveTextContent(/none/i);
+      });
+    });
+
+    // A colour below the threshold is perfectly usable as a page - it just
+    // leaves the code sitting on a white square, which looks like a mistake
+    // rather than a choice unless someone says so.
+    describe('a colour too dark for the code to blend into', () => {
+      const warning = () => screen.queryByTestId('background-warning-1');
+
+      it('says what will happen', () => {
+        showOne({ ...PLAIN, background: '#1d3557' });
+
+        expect(warning()).toHaveTextContent(/white square/i);
+      });
+
+      it('says nothing for a colour the code can take', () => {
+        showOne({ ...PLAIN, background: BACKGROUND_PRESETS[0].value });
+
+        expect(warning()).not.toBeInTheDocument();
+      });
+
+      it('says nothing when there is no colour at all', () => {
+        showOne(PLAIN);
+
+        expect(warning()).not.toBeInTheDocument();
+      });
+
+      // Adjacent greys either side of the threshold: nothing between them for a
+      // moved boundary to hide in.
+      it('warns on the dark side of the line and not the light side', () => {
+        showOne({ ...PLAIN, background: '#bbbbbb' });
+        expect(warning()).toBeInTheDocument();
+
+        cleanup();
+        showOne({ ...PLAIN, background: '#bcbcbc' });
+        expect(warning()).not.toBeInTheDocument();
       });
     });
 

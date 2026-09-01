@@ -106,21 +106,22 @@ export function contrastRatio(a, b) {
 
 // One tap covers the common case; the picker is there for everything else.
 //
-// These were once all pale enough for the QR code to tint into, which sounded
-// tidy and made every one of them a near-white indistinguishable from having no
-// background at all - the palest sat at 1.08:1 against a white page, so tapping
-// it appeared to do nothing whatsoever. The range is the point; the first four
-// still tint, and the rest hand the code back its white plate, which is a
-// visible difference rather than a broken one.
+// Every one of these clears the tint threshold, so the code always takes the
+// page colour and never sits on a white square. An earlier all-pale set did
+// that too and was a mistake - the colours were near-whites, indistinguishable
+// from having no background at all. The way out is not darker colours but
+// better-chosen ones: relative luminance weights green at 0.72 and blue at
+// 0.07, so yellows and greens clear the bar while still looking saturated,
+// where a blue or a red has to be a genuine pastel to manage it.
 export const BACKGROUND_PRESETS = [
-  { name: 'Paper', value: '#f2e6c8' },
-  { name: 'Blush', value: '#f6d5d5' },
-  { name: 'Mint', value: '#cdeadb' },
-  { name: 'Sky', value: '#cbe4f9' },
-  { name: 'Amber', value: '#e8a33d' },
-  { name: 'Teal', value: '#2f9e8f' },
-  { name: 'Indigo', value: '#4b4f9e' },
-  { name: 'Ink', value: '#1d3557' },
+  { name: 'Cream', value: '#f2e6c8' },
+  { name: 'Lemon', value: '#e8e46a' },
+  { name: 'Lime', value: '#bce06a' },
+  { name: 'Mint', value: '#8fdcb0' },
+  { name: 'Aqua', value: '#83dbd6' },
+  { name: 'Sky', value: '#c2e0f7' },
+  { name: 'Blush', value: '#f6d0d0' },
+  { name: 'Lilac', value: '#ded0f3' },
 ];
 
 /**

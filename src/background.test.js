@@ -197,10 +197,15 @@ describe('BACKGROUND_PRESETS', () => {
     });
   });
 
-  it('spans both QR treatments, rather than hiding one of them', () => {
-    const tinting = BACKGROUND_PRESETS.filter((p) => canTintQr(p.value));
-    expect(tinting.length).toBeGreaterThan(0);
-    expect(tinting.length).toBeLessThan(BACKGROUND_PRESETS.length);
+  // Every preset tints, so tapping one never leaves the code sitting on a white
+  // square. That is not a return to the old all-pale set: those failed by being
+  // indistinguishable from a white page, which the test above now forbids.
+  // Luminance weights green at 0.72 and blue at 0.07, so a yellow or a green can
+  // be saturated and still clear the bar.
+  it('all clear the threshold for the code to take the page colour', () => {
+    BACKGROUND_PRESETS.forEach((preset) => {
+      expect(canTintQr(preset.value)).toBe(true);
+    });
   });
 
   // Deliberately not contrastRatio: that measures lightness alone, so a green

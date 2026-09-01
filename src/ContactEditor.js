@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import QrContentsHelp from './QrContentsHelp';
-import { BACKGROUND_PRESETS, backgroundLabel, normalizeHex } from './background';
+import {
+  BACKGROUND_PRESETS,
+  backgroundLabel,
+  canTintQr,
+  normalizeHex,
+  relativeLuminance,
+} from './background';
 import './ContactEditor.css';
 
 // Pure so the end-of-list guard is reachable and testable. The buttons are also
@@ -167,7 +173,21 @@ function ContactEditor({
               </div>
               <p className="editor-background-name" data-testid={`background-name-${index + 1}`}>
                 {backgroundLabel(entry.background)}
+                {/* The number is what the threshold is actually about, so it is
+                    worth showing rather than leaving someone to nudge a colour
+                    until the white square happens to go away. */}
+                {relativeLuminance(entry.background) !== null &&
+                  ` · luminance ${relativeLuminance(entry.background).toFixed(2)}`}
               </p>
+              {normalizeHex(entry.background) && !canTintQr(entry.background) && (
+                <p
+                  className="editor-background-note"
+                  data-testid={`background-warning-${index + 1}`}
+                >
+                  Dark enough that the code cannot take this colour - it will sit on a white
+                  square instead. Lighten it past 0.50 for the code to blend into the page.
+                </p>
+              )}
               {backgroundProblem(entry) === 'unrecognised' && (
                 <p className="editor-entry-error">
                   Not a colour QRousel understands. Pick one above, or write it in the file as

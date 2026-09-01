@@ -82,10 +82,18 @@ Each entry can carry its own page background:
   editing the file by hand.
 * **The text colour follows the background** automatically: light backgrounds get
   dark text, dark backgrounds get light text.
-* **A pale background is drawn into the QR code itself**, so the code blends into
-  the page instead of sitting on a white square. A darker background keeps the
-  white surround, because black modules on a dark colour are not reliably
-  scannable. The first four presets tint; the rest keep the plate.
+* **The background is drawn into the QR code itself**, so the code blends into
+  the page instead of sitting on a white square - but only while the colour
+  stays light enough for the black modules to read against it. Every preset
+  clears that bar; the editor shows the number for whatever you pick and warns
+  when a custom colour falls below it.
+* **The bar is relative luminance 0.5**, which is about 11:1 against black - far
+  stricter than text needs, because a code a camera cannot read still looks
+  perfectly fine on a screen. It is not uniform across hues: luminance weights
+  green at 0.72 and blue at 0.07, so a yellow or a green clears it while still
+  looking saturated, where a blue or a red has to be a genuine pastel. As rules
+  of thumb, every hex pair at `c0` or above always clears it, and every pair at
+  `bb` or below never does.
 * The editor names the colour under the swatch row, since the swatches
   themselves carry no text and the palest of them barely change a light page.
 * An entry with no `background` key follows the phone's light or dark setting. An
