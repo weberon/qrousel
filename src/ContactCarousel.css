@@ -245,7 +245,7 @@
   /* Nothing here can be pressed on paper, and a dialog would cover the code. */
   .controls,
   .file-actions,
-  .version-footer,
+  .app-footer,
   .modal-backdrop {
     display: none !important;
   }

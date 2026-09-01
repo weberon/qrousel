@@ -17,6 +17,37 @@ describe('VersionFooter', () => {
     });
   });
 
+  it('carries the copyright', () => {
+    render(<VersionFooter />);
+
+    expect(screen.getByTestId('copyright')).toHaveTextContent(
+      /QRousel .* 2025 reachpersona\.com/
+    );
+  });
+
+  // Above the build line, which is the technical footnote of the two.
+  it('puts the copyright above the version', () => {
+    render(<VersionFooter />);
+
+    const copyright = screen.getByTestId('copyright');
+    const version = screen.getByTestId('version-footer');
+    // eslint-disable-next-line no-bitwise
+    expect(copyright.compareDocumentPosition(version) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
+  });
+
+  // The version degrades to "dev" when nothing was injected; the copyright is
+  // not conditional on anything.
+  it('shows the copyright even when no build information exists', () => {
+    delete process.env.REACT_APP_VERSION;
+    delete process.env.REACT_APP_COMMIT;
+    delete process.env.REACT_APP_BUILD_TIME;
+
+    render(<VersionFooter />);
+
+    expect(screen.getByTestId('copyright')).toBeInTheDocument();
+  });
+
   it('shows the version the app was built with', () => {
     process.env.REACT_APP_VERSION = '1.2.3';
     delete process.env.REACT_APP_BUILD_TIME;

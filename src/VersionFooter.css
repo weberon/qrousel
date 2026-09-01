@@ -1,8 +1,20 @@
-.version-footer {
+/* The band itself is the flex child now; the two lines inside it just stack. */
+.app-footer {
   flex-shrink: 0;
   width: 100%;
+}
+
+.app-copyright {
   margin: 0;
-  padding: 4px 0 6px;
+  padding: 6px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.version-footer {
+  margin: 0;
+  padding: 2px 0 6px;
   text-align: center;
   font-family: monospace;
   font-size: 11px;
