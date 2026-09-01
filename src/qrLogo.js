@@ -5,7 +5,17 @@ import { LOGO_WIDTH_RATIO } from './logo';
 // LOGO_WIDTH_RATIO - the mark is smaller still. Sizing the mark at the measured
 // ratio and then adding a plate around it would put the real occlusion at 25%,
 // past what a short payload survives.
-const PLATE_PADDING = 0.1;
+//
+// The padding is what makes the plate visible at all. At 10% the rim was a
+// couple of pixels on a phone, so a plate tinted to match the page looked no
+// different from a white one - the colour was there and could not be seen.
+const PLATE_PADDING = 0.18;
+
+// The plate is drawn as a rounded square rather than a square. It reads as a
+// deliberate badge instead of a hole punched through the code, and it occludes
+// slightly *less* than the square the scannability test punches - so the test
+// stays the conservative measurement.
+const PLATE_RADIUS = 0.22;
 
 /**
  * Where the plate and the mark go on a square code of `imageWidth` pixels.
@@ -20,6 +30,19 @@ export function logoPlacement(imageWidth) {
     plate: { size: plate, x: centre(plate), y: centre(plate) },
     mark: { size: mark, x: centre(mark), y: centre(mark) },
   };
+}
+
+// roundRect is recent enough (Chrome 99, Safari 16, Firefox 112) to need a way
+// out; a square plate is a fine thing to fall back to.
+function fillPlate(context, plate, colour) {
+  context.fillStyle = colour;
+  if (typeof context.roundRect === 'function') {
+    context.beginPath();
+    context.roundRect(plate.x, plate.y, plate.size, plate.size, plate.size * PLATE_RADIUS);
+    context.fill();
+    return;
+  }
+  context.fillRect(plate.x, plate.y, plate.size, plate.size);
 }
 
 function loadImage(src) {
@@ -79,8 +102,7 @@ export async function drawLogoOnQr(qrDataUrl, logoDataUrl, { plateColor = '#ffff
 
     // The plate takes the page colour when the code was tinted to match it, so
     // the mark sits in the page rather than in a white hole punched through it.
-    context.fillStyle = plateColor;
-    context.fillRect(plate.x, plate.y, plate.size, plate.size);
+    fillPlate(context, plate, plateColor);
     context.drawImage(mark, markBox.x, markBox.y, markBox.size, markBox.size);
 
     return canvas.toDataURL('image/png');

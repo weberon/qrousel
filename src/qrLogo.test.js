@@ -11,6 +11,16 @@ describe('logoPlacement', () => {
     expect(logoPlacement(1000).plate.size).toBe(1000 * LOGO_WIDTH_RATIO);
   });
 
+  // At 10% padding the rim was a couple of pixels on a phone, so a plate tinted
+  // to match the page was indistinguishable from a white one - the colour was
+  // applied and could not be seen.
+  it('leaves a rim wide enough to see the plate colour', () => {
+    const { plate, mark } = logoPlacement(1000);
+    const rim = (plate.size - mark.size) / 2;
+
+    expect(rim / plate.size).toBeGreaterThan(0.12);
+  });
+
   it('keeps the mark inside the plate', () => {
     const { plate, mark } = logoPlacement(1000);
     expect(mark.size).toBeLessThan(plate.size);
@@ -42,7 +52,15 @@ describe('drawLogoOnQr', () => {
     height: 0,
     getContext: () => ({
       drawImage: (image, x, y, w, h) => drawn.push({ src: image.src, x, y, w, h }),
-      fillRect: (x, y, w, h) => filled.push({ colour: exported.fillStyle, x, y, w, h }),
+      fillRect: (x, y, w, h) => filled.push({ colour: exported.fillStyle, x, y, w, h, round: 0 }),
+      beginPath: () => {},
+      fill: () => {},
+      ...(roundRectAvailable
+        ? {
+            roundRect: (x, y, w, h, r) =>
+              filled.push({ colour: exported.fillStyle, x, y, w, h, round: r }),
+          }
+        : {}),
       set fillStyle(value) {
         exported.fillStyle = value;
       },
@@ -53,8 +71,11 @@ describe('drawLogoOnQr', () => {
     toDataURL: () => 'data:image/png;base64,composed',
   });
 
+  let roundRectAvailable;
+
   beforeEach(() => {
     resetCanvasSupportForTests();
+    roundRectAvailable = true;
     drawn = [];
     filled = [];
     exported = {};
@@ -97,6 +118,25 @@ describe('drawLogoOnQr', () => {
     expect(filled[0].w).toBe(400 * LOGO_WIDTH_RATIO);
     const mark = drawn[1];
     expect(mark.w).toBeLessThan(filled[0].w);
+  });
+
+  // A square plate reads as a hole punched through the code; a rounded one reads
+  // as a badge - and occludes slightly less, so the square the decode test
+  // punches stays the conservative measurement.
+  it('rounds the plate', async () => {
+    await drawLogoOnQr(QR, MARK);
+
+    expect(filled[0].round).toBeGreaterThan(0);
+  });
+
+  it('falls back to a square plate where roundRect does not exist', async () => {
+    roundRectAvailable = false;
+
+    await drawLogoOnQr(QR, MARK);
+
+    expect(filled).toHaveLength(1);
+    expect(filled[0].round).toBe(0);
+    expect(filled[0].w).toBe(400 * LOGO_WIDTH_RATIO);
   });
 
   it('paints the plate white unless told otherwise', async () => {
