@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import QrContentsHelp from './QrContentsHelp';
+import { NO_LOGO, QROUSEL_LOGO, normalizeLogo } from './logo';
+import { readLogoFile, NOT_AN_IMAGE, TOO_LARGE } from './logoImport';
 import {
   BACKGROUND_PRESETS,
   backgroundLabel,
@@ -37,6 +39,35 @@ export function withBackground(entry, value) {
  * identical from the value alone: `background: #1d3557` unquoted is a comment
  * in YAML, so the key survives and the colour does not.
  */
+// What an entry's mark is, and where it came from - the second half being the
+// part a picker cannot show. An entry with no logo key looks identical to one
+// inheriting a file default until something says which.
+export function logoSource(entry, fileLogo) {
+  const own = normalizeLogo(entry && entry.logo);
+  if (own === NO_LOGO) return { from: 'none', logo: null };
+  if (own) return { from: 'entry', logo: own };
+
+  const shared = normalizeLogo(fileLogo);
+  if (shared === NO_LOGO) return { from: 'file-none', logo: null };
+  if (shared) return { from: 'file', logo: shared };
+  return { from: 'default', logo: QROUSEL_LOGO };
+}
+
+const LOGO_SOURCE_LABELS = {
+  none: 'no mark on this code',
+  entry: 'its own mark',
+  file: 'the default for this file',
+  'file-none': 'no mark - this file has turned them off',
+  default: 'the QRousel mark',
+};
+
+const LOGO_PROBLEMS = {
+  [NOT_AN_IMAGE]: 'That file is not an image the browser can read.',
+  [TOO_LARGE]:
+    'That picture is too large to carry inside a qrdata file, even shrunk. Try a simpler mark.',
+};
+const LOGO_PROBLEM_FALLBACK = 'That picture could not be prepared in this browser.';
+
 export function backgroundProblem(entry) {
   if (!entry || !('background' in entry)) return null;
   const raw = entry.background;
@@ -52,19 +83,45 @@ export function backgroundProblem(entry) {
  */
 function ContactEditor({
   entries,
+  fileLogo,
   invalid,
   status,
+  storageWarning,
   canSaveInPlace,
   saveDisabledReason,
   onChange,
+  onFileLogoChange,
   onSave,
   onSaveAs,
   onDone,
 }) {
+  const [logoProblem, setLogoProblem] = useState(null);
+
+  // A picked file is never stored as picked - readLogoFile draws it down first,
+  // and says why when it cannot.
+  const pickLogo = async (file, apply) => {
+    setLogoProblem(null);
+    const result = await readLogoFile(file);
+    if (result.ok) apply(result.logo);
+    else setLogoProblem(LOGO_PROBLEMS[result.reason] || LOGO_PROBLEM_FALLBACK);
+  };
   // Which payloads the viewer will act on is not guessable from an empty text
   // box, and the answer is the same for every entry - so this is one dialog
   // reachable from each row, not one per row.
   const [isContentsHelpOpen, setIsContentsHelpOpen] = useState(false);
+
+  const setLogo = (index, value) => {
+    onChange(
+      entries.map((entry, i) => {
+        if (i !== index) return entry;
+        if (value) return { ...entry, logo: value };
+        // Removing the key hands the entry back to the file default, which is a
+        // different thing from having no mark - hence two separate controls.
+        const { logo, ...rest } = entry;
+        return rest;
+      })
+    );
+  };
 
   const updateEntry = (index, field, value) => {
     onChange(entries.map((entry, i) => (i === index ? { ...entry, [field]: value } : entry)));
@@ -96,6 +153,57 @@ function ContactEditor({
 
       {entries.length === 0 && (
         <p className="editor-empty">No entries yet. Add one to get started.</p>
+      )}
+
+      <div className="editor-file-logo">
+        <div className="editor-field-head">
+          <span className="editor-field-name">Logo for this file</span>
+        </div>
+        <div className="editor-logo">
+          {normalizeLogo(fileLogo) && normalizeLogo(fileLogo) !== NO_LOGO && (
+            <img
+              className="editor-logo-preview"
+              data-testid="file-logo-preview"
+              src={normalizeLogo(fileLogo)}
+              alt=""
+            />
+          )}
+          <label className="editor-logo-pick">
+            <span>Choose&hellip;</span>
+            <input
+              type="file"
+              accept="image/*"
+              aria-label="Choose a default logo for this file"
+              onChange={(e) =>
+                pickLogo(e.target.files && e.target.files[0], (logo) => onFileLogoChange(logo))
+              }
+            />
+          </label>
+          <button type="button" onClick={() => onFileLogoChange(NO_LOGO)}>
+            No marks in this file
+          </button>
+          <button type="button" onClick={() => onFileLogoChange(null)}>
+            Use the QRousel mark
+          </button>
+        </div>
+        <p className="editor-background-name" data-testid="file-logo-source">
+          {normalizeLogo(fileLogo) === NO_LOGO
+            ? 'Entries show no mark unless they set one.'
+            : normalizeLogo(fileLogo)
+              ? 'Entries without a mark of their own show this one.'
+              : 'Entries without a mark of their own show the QRousel mark.'}
+        </p>
+        {logoProblem && (
+          <p className="editor-entry-error" data-testid="logo-problem">
+            {logoProblem}
+          </p>
+        )}
+      </div>
+
+      {storageWarning && (
+        <p className="editor-background-note" role="status" data-testid="storage-warning">
+          {storageWarning}
+        </p>
       )}
 
       <ol className="editor-entries">
@@ -201,6 +309,43 @@ function ContactEditor({
                   background: &lsquo;#1d3557&rsquo;. Pick a colour above and Save to fix it.
                 </p>
               )}
+            </div>
+            <div className="editor-field">
+              <div className="editor-field-head">
+                <span className="editor-field-name">Logo</span>
+              </div>
+              <div className="editor-logo">
+                {logoSource(entry, fileLogo).logo && (
+                  <img
+                    className="editor-logo-preview"
+                    data-testid={`logo-preview-${index + 1}`}
+                    src={logoSource(entry, fileLogo).logo}
+                    alt=""
+                  />
+                )}
+                <label className="editor-logo-pick">
+                  <span>Choose&hellip;</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    aria-label={`Choose a logo for entry ${index + 1}`}
+                    onChange={(e) => pickLogo(e.target.files && e.target.files[0], (logo) =>
+                      setLogo(index, logo)
+                    )}
+                  />
+                </label>
+                <button type="button" onClick={() => setLogo(index, NO_LOGO)}>
+                  No mark on this code
+                </button>
+                <button type="button" onClick={() => setLogo(index, null)}>
+                  Use the default
+                </button>
+              </div>
+              {/* An entry with no logo key looks exactly like one inheriting a
+                  default, so the preview alone cannot say which. */}
+              <p className="editor-background-name" data-testid={`logo-source-${index + 1}`}>
+                Showing {LOGO_SOURCE_LABELS[logoSource(entry, fileLogo).from]}
+              </p>
             </div>
             <label className="editor-field">
               <span>Description</span>

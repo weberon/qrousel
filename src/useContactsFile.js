@@ -12,6 +12,9 @@ const STORAGE_KEY = 'contactsData';
 const FILE_NAME_KEY = 'contactsFileName';
 const FILE_LOGO_KEY = 'contactsFileLogo';
 
+export const STORAGE_FULL_MESSAGE =
+  'Your entries are saved in the file, but there was not room to remember them in this browser - most likely a logo is too large. They are still here for now; reloading the page would lose them.';
+
 export const CORRUPT_STORAGE_MESSAGE =
   'Saved contact data was invalid and has been cleared. Please select your qrdata.yaml file again.';
 
@@ -119,6 +122,10 @@ export default function useContactsFile() {
   // Belongs to the file rather than to any entry, so it is held and persisted
   // apart from them.
   const [fileLogo, setFileLogo] = useState(null);
+  // Set when the browser refused to keep a copy. The file itself was still
+  // written - what is lost is only surviving a reload, which is worth saying
+  // plainly rather than letting the entries quietly vanish later.
+  const [storageWarning, setStorageWarning] = useState(null);
   // Held for the session only. A FileSystemFileHandle is not serializable, so
   // after a reload there is no link to the original file and Save As is the
   // only way to write.
@@ -163,18 +170,39 @@ export default function useContactsFile() {
     [adoptName]
   );
 
-  const commit = useCallback((entries) => {
-    setContacts(entries);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  // Logos are the first thing this app stores that is large enough to run out
+  // of room. A refusal here is not a lost save - the file was written - so it
+  // must not throw, and it must not be silent either.
+  const remember = useCallback((key, value) => {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      setStorageWarning(STORAGE_FULL_MESSAGE);
+      localStorage.removeItem(key);
+      return false;
+    }
   }, []);
+
+  const commit = useCallback(
+    (entries) => {
+      setContacts(entries);
+      setStorageWarning(null);
+      remember(STORAGE_KEY, JSON.stringify(entries));
+    },
+    [remember]
+  );
 
   // Adopted alongside the entries it applies to, and cleared when a file sets
   // none - otherwise the previous file's mark would follow you into the next.
-  const adoptFileLogo = useCallback((logo) => {
-    setFileLogo(logo || null);
-    if (logo) localStorage.setItem(FILE_LOGO_KEY, logo);
-    else localStorage.removeItem(FILE_LOGO_KEY);
-  }, []);
+  const adoptFileLogo = useCallback(
+    (logo) => {
+      setFileLogo(logo || null);
+      if (logo) remember(FILE_LOGO_KEY, logo);
+      else localStorage.removeItem(FILE_LOGO_KEY);
+    },
+    [remember]
+  );
 
   const load = useCallback(async () => {
     try {
@@ -212,7 +240,7 @@ export default function useContactsFile() {
   }, [adoptName, adoptFileLogo, commit, rememberFile]);
 
   const save = useCallback(
-    async (entries) => {
+    async (entries, draftLogo = fileLogo) => {
       const invalid = findInvalidEntries(entries);
       if (invalid.length > 0) return { ok: false, reason: 'invalid', invalid };
 
@@ -228,8 +256,9 @@ export default function useContactsFile() {
         }
         if (permission !== 'granted') return { ok: false, reason: 'denied' };
 
-        await writeEntries(fileHandle, entries, fileLogo);
+        await writeEntries(fileHandle, entries, draftLogo);
         setIsForeignFile(false);
+        adoptFileLogo(normalizeLogo(draftLogo));
         commit(entries);
         return { ok: true };
       } catch (e) {
@@ -237,11 +266,11 @@ export default function useContactsFile() {
         return { ok: false, reason: 'write-failed', message: e.message };
       }
     },
-    [commit, fileLogo]
+    [adoptFileLogo, commit, fileLogo]
   );
 
   const saveAs = useCallback(
-    async (entries) => {
+    async (entries, draftLogo = fileLogo) => {
       const invalid = findInvalidEntries(entries);
       if (invalid.length > 0) return { ok: false, reason: 'invalid', invalid };
 
@@ -251,8 +280,9 @@ export default function useContactsFile() {
         // A download is one-way: no handle comes back, and there is no way to
         // learn where it landed or whether the name survived. Reporting it as
         // a plain save would claim more than is known, hence via.
-        downloadFile(name, serializeContacts(entries, fileLogo));
+        downloadFile(name, serializeContacts(entries, draftLogo));
         adoptName(name);
+        adoptFileLogo(normalizeLogo(draftLogo));
         commit(entries);
         return { ok: true, via: 'download' };
       }
@@ -262,11 +292,12 @@ export default function useContactsFile() {
           suggestedName: name,
           types: [YAML_FILE_TYPE],
         });
-        await writeEntries(fileHandle, entries, fileLogo);
+        await writeEntries(fileHandle, entries, draftLogo);
 
         // Only adopt the new file once the write actually landed.
         rememberFile(fileHandle);
         setIsForeignFile(false);
+        adoptFileLogo(normalizeLogo(draftLogo));
         commit(entries);
         return { ok: true };
       } catch (e) {
@@ -275,7 +306,7 @@ export default function useContactsFile() {
         return { ok: false, reason: 'write-failed', message: e.message };
       }
     },
-    [adoptName, commit, rememberFile, fileName, fileLogo]
+    [adoptName, adoptFileLogo, commit, rememberFile, fileName, fileLogo]
   );
 
   const clearError = useCallback(() => setError(null), []);
@@ -285,6 +316,7 @@ export default function useContactsFile() {
     error,
     fileName,
     fileLogo,
+    storageWarning,
     canSaveInPlace,
     isForeignFile,
     load,

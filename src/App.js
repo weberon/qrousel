@@ -31,6 +31,7 @@ function App() {
     error,
     fileName,
     fileLogo,
+    storageWarning,
     canSaveInPlace,
     isForeignFile,
     load,
@@ -45,6 +46,9 @@ function App() {
   const [status, setStatus] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isOverwriteWarningOpen, setIsOverwriteWarningOpen] = useState(false);
+  // The file's default logo is edited alongside its entries and commits with
+  // them, so it belongs to the draft rather than to the saved file until then.
+  const [draftFileLogo, setDraftFileLogo] = useState(null);
 
   // Warn before the tab closes on unsaved edits.
   useEffect(() => {
@@ -59,6 +63,7 @@ function App() {
 
   const enterEditor = (entries, dirty) => {
     setDraft(entries);
+    setDraftFileLogo(fileLogo);
     setInvalid([]);
     setStatus(null);
     setIsDirty(dirty);
@@ -72,6 +77,12 @@ function App() {
     setDraft(entries);
     setIsDirty(true);
     setInvalid([]);
+    setStatus(null);
+  };
+
+  const handleFileLogoChange = (logo) => {
+    setDraftFileLogo(logo);
+    setIsDirty(true);
     setStatus(null);
   };
 
@@ -94,7 +105,7 @@ function App() {
 
   const writeInPlace = async () => {
     setIsOverwriteWarningOpen(false);
-    applyResult(await save(draft));
+    applyResult(await save(draft, draftFileLogo));
   };
 
   const handleSave = async () => {
@@ -117,7 +128,7 @@ function App() {
 
   const handleSaveAs = async () => {
     setIsOverwriteWarningOpen(false);
-    applyResult(await saveAs(draft));
+    applyResult(await saveAs(draft, draftFileLogo));
   };
 
   const confirmDiscard = useCallback(() => {
@@ -142,13 +153,16 @@ function App() {
       <>
         <ContactEditor
           entries={draft}
+          fileLogo={draftFileLogo}
           invalid={invalid}
           status={status}
+          storageWarning={storageWarning}
           canSaveInPlace={canSaveInPlace}
           saveDisabledReason={
             isFileSystemAccessSupported() ? NO_HANDLE_REASON : NO_FILE_ACCESS_REASON
           }
           onChange={handleChange}
+          onFileLogoChange={handleFileLogoChange}
           onSave={handleSave}
           onSaveAs={handleSaveAs}
           onDone={handleDone}

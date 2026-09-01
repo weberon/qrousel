@@ -131,6 +131,26 @@ entries:
   timing patterns, and it stops decoding above that. There is an automated test
   that decodes generated codes to check this stays true.
 
+#### Setting a logo in the editor
+
+The editor has a **Logo for this file** block above the entries and a **Logo**
+row on each one. Both offer *Choose…*, a way to turn marks off, and a way back
+to inheriting.
+
+* **Pictures are shrunk on the way in**, to 256px on the longest side and
+  re-encoded as PNG. The whole file lives inside the YAML and is mirrored into
+  browser storage, so a phone photo stored as picked would fill it on its own.
+  A picture that will not fit even shrunk is refused with a reason rather than
+  stored.
+* **"No mark" and "Use the default" are different things.** The first writes
+  `logo: none`; the second removes the key so the entry inherits again. Without
+  both there would be no way back from either choice.
+* **The caption says which is in effect**, because an entry with no logo of its
+  own looks exactly like one inheriting a default.
+* **Browser storage can run out.** Logos are the first thing large enough to do
+  it. The file is still written; what is lost is only remembering the entries
+  across a reload, and the editor says so rather than letting them vanish later.
+
 ### Browser support
 
 Every browser can open a `qrdata.yaml`, view the codes, edit the entries, and

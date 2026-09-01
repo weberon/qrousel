@@ -81,7 +81,8 @@ function HelpDialog({ onClose }) {
           delete, and reorder your codes. A code can hold anything - a web address, a phone
           number, wifi details, or a plain note. The <strong>?</strong> beside each contents
           box shows what to type for each of those. Each entry can also be given its own
-          background colour, which the whole screen takes when that code is showing.
+          background colour, which the whole screen takes when that code is showing, and its
+          own logo for the middle of the code - or none at all.
         </dd>
 
         <dt>

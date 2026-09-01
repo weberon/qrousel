@@ -113,6 +113,146 @@ describe('ContactEditor', () => {
     );
     expect(screen.getByLabelText('QR contents for entry 2')).toHaveValue('tel:+15551234567');
   });
+  describe('logos', () => {
+    const PNG = 'data:image/png;base64,iVBORw0KGgo=';
+    const OTHER = 'data:image/png;base64,b3RoZXI=';
+    const PLAIN = { url: 'https://example.com', description: 'One' };
+
+    const showLogos = (entry, props = {}) => {
+      const onChange = jest.fn();
+      const onFileLogoChange = jest.fn();
+      render(
+        <ContactEditor
+          entries={[entry]}
+          fileLogo={null}
+          invalid={[]}
+          status={null}
+          canSaveInPlace={false}
+          saveDisabledReason="no handle"
+          onChange={onChange}
+          onFileLogoChange={onFileLogoChange}
+          onSave={() => {}}
+          onSaveAs={() => {}}
+          onDone={() => {}}
+          {...props}
+        />
+      );
+      return { onChange, onFileLogoChange };
+    };
+
+    const entryOut = (onChange) => onChange.mock.calls[0][0][0];
+
+    describe('per entry', () => {
+      it('says where its mark is coming from when it sets none', () => {
+        showLogos(PLAIN);
+
+        expect(screen.getByTestId('logo-source-1')).toHaveTextContent(/QRousel/i);
+      });
+
+      it('says when it is inheriting the file default', () => {
+        showLogos(PLAIN, { fileLogo: PNG });
+
+        expect(screen.getByTestId('logo-source-1')).toHaveTextContent(/this file/i);
+      });
+
+      it('says when it has one of its own', () => {
+        showLogos({ ...PLAIN, logo: OTHER });
+
+        expect(screen.getByTestId('logo-source-1')).toHaveTextContent(/its own/i);
+      });
+
+      it('says when it has opted out', () => {
+        showLogos({ ...PLAIN, logo: 'none' });
+
+        expect(screen.getByTestId('logo-source-1')).toHaveTextContent(/no mark/i);
+      });
+
+      it('shows what will actually be drawn', () => {
+        showLogos({ ...PLAIN, logo: OTHER });
+
+        expect(screen.getByTestId('logo-preview-1')).toHaveAttribute('src', OTHER);
+      });
+
+      it('shows no preview for an entry that opted out', () => {
+        showLogos({ ...PLAIN, logo: 'none' });
+
+        expect(screen.queryByTestId('logo-preview-1')).not.toBeInTheDocument();
+      });
+
+      it('can opt the entry out', () => {
+        const { onChange } = showLogos({ ...PLAIN, logo: OTHER });
+
+        fireEvent.click(screen.getByRole('button', { name: /no mark on this code/i }));
+
+        expect(entryOut(onChange).logo).toBe('none');
+      });
+
+      // Back to inheriting, which is a different thing from having none - and
+      // without this there would be no way back from either choice.
+      it('can hand the entry back to the file default', () => {
+        const { onChange } = showLogos({ ...PLAIN, logo: OTHER });
+
+        fireEvent.click(screen.getByRole('button', { name: /use the default/i }));
+
+        expect('logo' in entryOut(onChange)).toBe(false);
+      });
+
+      it('leaves the rest of the entry alone', () => {
+        const { onChange } = showLogos({ ...PLAIN, logo: OTHER });
+
+        fireEvent.click(screen.getByRole('button', { name: /no mark on this code/i }));
+
+        expect(entryOut(onChange)).toMatchObject({ url: PLAIN.url, description: PLAIN.description });
+      });
+    });
+
+    describe('for the whole file', () => {
+      it('offers a default that applies to every entry', () => {
+        showLogos(PLAIN);
+
+        expect(screen.getByTestId('file-logo-source')).toBeInTheDocument();
+      });
+
+      it('says when the file has set one', () => {
+        showLogos(PLAIN, { fileLogo: PNG });
+
+        expect(screen.getByTestId('file-logo-preview')).toHaveAttribute('src', PNG);
+      });
+
+      it('can clear the file default', () => {
+        const { onFileLogoChange } = showLogos(PLAIN, { fileLogo: PNG });
+
+        fireEvent.click(screen.getByRole('button', { name: /^Use the QRousel mark$/i }));
+
+        expect(onFileLogoChange).toHaveBeenCalledWith(null);
+      });
+
+      // Otherwise a file wanting bare codes would need `none` written on every
+      // entry, and adding an entry would silently bring a mark back.
+      it('can opt the whole file out', () => {
+        const { onFileLogoChange } = showLogos(PLAIN);
+
+        fireEvent.click(screen.getByRole('button', { name: /no marks in this file/i }));
+
+        expect(onFileLogoChange).toHaveBeenCalledWith('none');
+      });
+    });
+
+    describe('when the browser ran out of room', () => {
+      it('says so, and says the file was still written', () => {
+        showLogos(PLAIN, { storageWarning: 'no room for that' });
+
+        expect(screen.getByTestId('storage-warning')).toHaveTextContent('no room for that');
+      });
+
+      it('says nothing when there is room', () => {
+        showLogos(PLAIN);
+
+        expect(screen.queryByTestId('storage-warning')).not.toBeInTheDocument();
+      });
+    });
+  });
+
   describe('background colour', () => {
     const showOne = (entry) => {
       const onChange = jest.fn();
