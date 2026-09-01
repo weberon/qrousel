@@ -26,8 +26,18 @@ const SAVE_FAILURE_MESSAGES = {
 };
 
 function App() {
-  const { contacts, error, fileName, canSaveInPlace, isForeignFile, load, save, saveAs, clearError } =
-    useContactsFile();
+  const {
+    contacts,
+    error,
+    fileName,
+    fileLogo,
+    canSaveInPlace,
+    isForeignFile,
+    load,
+    save,
+    saveAs,
+    clearError,
+  } = useContactsFile();
 
   const [mode, setMode] = useState('view');
   const [draft, setDraft] = useState([]);
@@ -181,6 +191,7 @@ function App() {
     <ContactCarousel
       contacts={contacts}
       fileName={fileName}
+      fileLogo={fileLogo}
       onLoadFile={handleLoad}
       onEdit={editLoaded}
     />

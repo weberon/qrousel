@@ -92,6 +92,37 @@ Each entry can carry its own page background:
   entry **with** one looks the same either way - the colour is your choice about
   how that card looks, not a theme for the viewer's phone to override.
 
+### Logos
+
+Every code carries a mark in the middle. By default it is the QRousel one; an
+entry may set its own, and a file may set a default for all of its entries:
+
+```yaml
+logo: data:image/png;base64,iVBORw0KGgo=   # the default for this file
+entries:
+  - url: https://example.com
+    description: Our office
+    logo: data:image/png;base64,…          # this card overrides it
+  - url: https://example.com/other
+    logo: none                             # this card has no mark at all
+```
+
+* **The wrapper is optional.** A file that is just a list of entries - which is
+  every file written before this existed - still works exactly as before, and is
+  written back as a list. The `logo:`/`entries:` shape only appears once there is
+  a file-level default to carry.
+* **`none` opts out**, on an entry or on the whole file. An entry with its own
+  logo still shows it in a file that opted out.
+* **Only `data:` images.** A logo living in the file costs no request and cannot
+  disappear; an `https:` one would tell that server every time somebody looks at
+  your card.
+* **Codes are generated at error correction level H** so there is room to
+  reconstruct what the mark covers. Codes are denser as a result.
+* **The mark covers 20% of the width**, which was measured rather than chosen: a
+  bare phone number makes a small code whose middle is close to the structural
+  timing patterns, and it stops decoding above that. There is an automated test
+  that decodes generated codes to check this stays true.
+
 ### Browser support
 
 Every browser can open a `qrdata.yaml`, view the codes, edit the entries, and

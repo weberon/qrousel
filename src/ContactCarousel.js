@@ -3,6 +3,8 @@ import QRCode from 'qrcode';
 import { marked } from 'marked';
 import QrContentsDialog from './QrContentsDialog';
 import { normalizeHex, textColorFor, canTintQr, isLightBackground } from './background';
+import { resolveLogo, QR_ERROR_CORRECTION } from './logo';
+import { drawLogoOnQr } from './qrLogo';
 import HelpDialog from './HelpDialog';
 import VersionFooter from './VersionFooter';
 import './ContactCarousel.css';
@@ -17,7 +19,7 @@ const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
 // click on a hybrid device is not swallowed.
 const CLICK_AFTER_TOUCH_MS = 600;
 const QR_PIXEL_SIZE = 1024;
-function ContactCarousel({ contacts, fileName, onLoadFile, onEdit }) {
+function ContactCarousel({ contacts, fileName, fileLogo, onLoadFile, onEdit }) {
   const [qrCodes, setQrCodes] = useState([]);
   // Always plain black on white, whatever the screen shows.
   const [printCodes, setPrintCodes] = useState([]);
@@ -41,23 +43,43 @@ function ContactCarousel({ contacts, fileName, onLoadFile, onEdit }) {
               // Rendered at ~80% of the viewport width, so generate well above
               // that: a small raster upscaled on a high-DPI screen blurs the
               // module edges a scanner needs. ~10 KiB per code as a data URL.
-              const options = { width: QR_PIXEL_SIZE };
+              const options = {
+                width: QR_PIXEL_SIZE,
+                // Level H so a mark in the middle is affordable. Every code is
+                // denser for it, whether or not it ends up carrying one.
+                errorCorrectionLevel: QR_ERROR_CORRECTION,
+              };
               // A pale page can take the quiet zone and light modules, so the
               // code stops being a white square sitting on a colour. Only when
               // the contrast against the black modules survives it - a code a
               // camera cannot read still looks perfectly fine on screen, which
               // is what makes getting this wrong expensive.
               const tint = normalizeHex(contact.background);
-              if (tint && canTintQr(tint)) {
-                options.color = { light: tint };
+              const tinted = Boolean(tint && canTintQr(tint));
+              if (tinted) options.color = { light: tint };
+
+              const mark = resolveLogo(contact, fileLogo);
+              const code = await drawLogoOnQr(
+                await QRCode.toDataURL(contact.url, options),
+                mark,
+                // The plate takes the tint, so the mark sits in the page rather
+                // than in a white hole punched through it.
+                { plateColor: tinted ? tint : '#ffffff' }
+              );
+
+              if (tinted) {
                 // The tint is baked into the PNG, so no stylesheet can take it
                 // back out for paper. A plain code is generated alongside it -
                 // but only here, since an untinted entry's code is already the
                 // one to print and generating it twice would be pure waste.
-                printable[index] = await QRCode.toDataURL(contact.url, { width: QR_PIXEL_SIZE });
+                const plain = await QRCode.toDataURL(contact.url, {
+                  width: QR_PIXEL_SIZE,
+                  errorCorrectionLevel: QR_ERROR_CORRECTION,
+                });
+                printable[index] = await drawLogoOnQr(plain, mark, { plateColor: '#ffffff' });
+              } else {
+                printable[index] = code;
               }
-              const code = await QRCode.toDataURL(contact.url, options);
-              if (!printable[index]) printable[index] = code;
               return code;
             } catch (error) {
               console.error(`Error generating QR code for ${contact.url}:`, error);
@@ -71,7 +93,7 @@ function ContactCarousel({ contacts, fileName, onLoadFile, onEdit }) {
     };
 
     generateQRCodes();
-  }, [contacts]);
+  }, [contacts, fileLogo]);
 
   useEffect(() => {
     setDescriptionHtml(null);

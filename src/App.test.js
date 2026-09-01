@@ -425,6 +425,54 @@ describe('App', () => {
     });
   });
 
+  // A file may carry a default mark for its entries, which means it is a mapping
+  // rather than the bare list every older file is. Both shapes have to work, and
+  // a save must not quietly convert one into the other.
+  describe('a file with a default logo', () => {
+    const LOGO = 'data:image/png;base64,iVBORw0KGgo=';
+
+    const wrappedHandle = (name = 'qrdata.yaml') => ({
+      ...makeHandle(name),
+      getFile: () => ({
+        text: () => Promise.resolve(yaml.dump({ logo: LOGO, entries: CONTACTS })),
+      }),
+    });
+
+    it('shows the entries inside the wrapper', async () => {
+      openPicker.mockResolvedValue([wrappedHandle()]);
+      await renderApp();
+      await click(/Select qrdata\.yaml/i);
+
+      expect(await screen.findByText('Test Description 1')).toBeInTheDocument();
+    });
+
+    it('keeps the wrapper when the file is saved again', async () => {
+      openPicker.mockResolvedValue([wrappedHandle()]);
+      await renderApp();
+      await click(/Select qrdata\.yaml/i);
+      await screen.findByText('Test Description 1');
+      await click(/^Edit\b/);
+
+      await saveInPlace();
+
+      const written = yaml.load(writes[0].text);
+      expect(Array.isArray(written)).toBe(false);
+      expect(written.logo).toBe(LOGO);
+      expect(written.entries).toHaveLength(CONTACTS.length);
+    });
+
+    // The other direction matters just as much: a plain list must not sprout a
+    // wrapper it never had.
+    it('leaves a file that had no default as a plain list', async () => {
+      await loadFile();
+      await click(/^Edit\b/);
+
+      await saveInPlace();
+
+      expect(Array.isArray(yaml.load(writes[0].text))).toBe(true);
+    });
+  });
+
   describe('entry background colour', () => {
     // Every entry has its own swatch row, so a preset name alone is ambiguous.
     const pickBackgroundFor = async (entry, name) => {

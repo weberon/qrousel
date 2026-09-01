@@ -549,6 +549,14 @@ describe('ContactCarousel', () => {
       expect(root()).toHaveClass('ContactCarousel');
     });
 
+    it('generates every code at the level a centre mark needs', async () => {
+      await renderWithContacts(WITH_COLOURS);
+
+      QRCode.toDataURL.mock.calls.forEach((call) => {
+        expect(call[1].errorCorrectionLevel).toBe('H');
+      });
+    });
+
     it('still generates at the full pixel size when tinting', async () => {
       await renderWithContacts(WITH_COLOURS);
 
